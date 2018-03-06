@@ -1,10 +1,10 @@
 service: locatotron-backend
 
-frameworkVersion: "=1.10.0"
+frameworkVersion: ">=1.10.0"
 
 provider:
   name: aws
-  profile: locatotron
+  profile: ltest
   stage: dev
   runtime: nodejs6.10
   environment:
@@ -88,7 +88,7 @@ functions:
           cors: true
   notify:
     handler: lambda/campaign.notifyHandler
-    timeout: 60
+    timeout: 30
     events:
       - http:
           path: notify

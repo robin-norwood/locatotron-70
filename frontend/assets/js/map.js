@@ -14,7 +14,6 @@ class Map {
 
   mapLoaded() {
     this.ready = true;
-
     this.initMap();
   }
 
@@ -48,7 +47,7 @@ class Map {
     }
     else if (this.config.mode == 'admin') {
       this.drawingManager = new google.maps.drawing.DrawingManager({
-        drawingMode: null, //google.maps.drawing.OverlayType.CIRCLE,
+        drawingMode: null,
         drawingControl: true,
         drawingControlOptions: {
           drawingModes: ['circle'],
@@ -79,8 +78,6 @@ class Map {
         });
       });
     }
-
-
   }
 
   setMapLocation(latlng, zoom) {
@@ -119,7 +116,6 @@ class Map {
 
   enableDrawing() {
     this.drawingManager.setMap(this.map);
-
   }
 
 }

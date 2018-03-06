@@ -69,14 +69,14 @@ function initDBQuery(query, params, callback) {
   })
 }
 
-exports.createTablesHandler = (event, context, callback) => {
-  context.callbackWaitsForEmptyEventLoop = false;
-
-  initDBQuery(createTablesQuery, [], callback);
-};
-
 exports.setupPostGISHandler = (event, context, callback) => {
   context.callbackWaitsForEmptyEventLoop = false;
 
   initDBQuery(setupPostGISQuery, [], callback);
+};
+
+exports.createTablesHandler = (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+
+  initDBQuery(createTablesQuery, [], callback);
 };

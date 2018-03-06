@@ -10,7 +10,7 @@
   "keywords": [
     "geolocation",
     "aws",
-    "acloudguru"
+    "serverless"
   ],
   "author": "Robin Norwood <robin@acloud.guru>",
   "license": "ISC",
@@ -19,6 +19,5 @@
     "pg": "^7.4.1",
     "rand-token": "^0.4.0"
   },
-  "devDependencies": {
-  }
+  "devDependencies": {}
 }

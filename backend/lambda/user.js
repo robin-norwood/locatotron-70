@@ -70,8 +70,6 @@ DELETE
    AND token = $2;
 `;
 
-
-
 function userDBQuery(query, params, callback) {
   let response = {
     headers: {
@@ -112,18 +110,6 @@ function userDBQuery(query, params, callback) {
     });
 }
 
-exports.getUserHandler = (event, context, callback) => {
-  context.callbackWaitsForEmptyEventLoop = false;
-
-  let id = parseInt(event.pathParameters.id);
-  let token = '';
-  if (event.queryStringParameters) {
-    token = event.queryStringParameters.token;
-  }
-
-  userDBQuery(getUserQuery, [id, token], callback);
-};
-
 exports.createUserHandler = (event, context, callback) => {
   context.callbackWaitsForEmptyEventLoop = false;
   let data = JSON.parse(event.body);
@@ -159,14 +145,27 @@ exports.updateUserHandler = (event, context, callback) => {
   );
 };
 
+exports.getUserHandler = (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+
+  let id = parseInt(event.pathParameters.id);
+  let token = event.queryStringParameters.token;
+
+  userDBQuery(getUserQuery, [id, token], callback);
+};
+
 exports.deleteUserHandler = (event, context, callback) => {
   context.callbackWaitsForEmptyEventLoop = false;
-  let data = JSON.parse(event.body);
-  let userid = parseInt(event.queryStringParameters.userid);
+
+  let id = parseInt(event.pathParameters.id);
+  let token = '';
+  if (event.queryStringParameters) {
+    token = event.queryStringParameters.token;
+  }
 
   userDBQuery(
     deleteUserQuery,
-    [data.id, data.token],
+    [id, token],
     callback
   );
 };

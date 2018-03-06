@@ -10,7 +10,7 @@ const mailgun = require('mailgun-js')(
   {
     apiKey: mailgun_apikey,
     domain: mailgun_domain,
-    timeout: 5000
+    timeout: 1000
 });
 
 const pool = new Pool({
@@ -219,6 +219,7 @@ exports.notifyHandler = (event, context, callback) => {
     [data.campaign.id, data.campaign.id, data.campaign.admin_token, data.lng, data.lat, data.distance])
     .then(result => {
       response.body = JSON.stringify({users: result.rows});
+
       let notifications = generateNotifications(data.campaign, result.rows);
       Promise.all(notifications).then(() => {
         callback(null, response);

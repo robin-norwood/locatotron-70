@@ -7,3 +7,8 @@ jspm_packages
 
 # Metalsmith distribution
 dist
+
+# Dev config
+config.dev.json
+
+package-lock.json

@@ -1,10 +1,10 @@
 service: locatotron-infra
 
-frameworkVersion: "=1.10.0"
+frameworkVersion: ">=1.10.0"
 
 provider:
   name: aws
-  profile: locatotron
+  profile: ltest
   stage: dev
 
 resources:
@@ -73,29 +73,6 @@ resources:
             - '0'
             - Fn::GetAZs: ''
 
-    publicSubnetB:
-      Type: AWS::EC2::Subnet
-      Properties:
-        VpcId:
-          Ref: locatotronVPC
-        CidrBlock: 10.0.4.0/24
-        AvailabilityZone:
-          Fn::Select:
-            - '1'
-            - Fn::GetAZs: ''
-
-    routeTableLambdaPublicA:
-      Type: AWS::EC2::RouteTable
-      Properties:
-        VpcId:
-          Ref: locatotronVPC
-
-    routeTableLambdaPublicB:
-      Type: AWS::EC2::RouteTable
-      Properties:
-        VpcId:
-          Ref: locatotronVPC
-
     routeTableLambdaPrivateA:
       Type: AWS::EC2::RouteTable
       Properties:
@@ -103,6 +80,12 @@ resources:
           Ref: locatotronVPC
 
     routeTableLambdaPrivateB:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: locatotronVPC
+
+    routeTableLambdaPublicA:
       Type: AWS::EC2::RouteTable
       Properties:
         VpcId:
@@ -135,32 +118,6 @@ resources:
         GatewayId:
           Ref: locatotronInternetGateway
 
-    routeLambdaPublicB:
-      Type: AWS::EC2::Route
-      DependsOn: locatotronVPCGatewayAttachment
-      Properties:
-        RouteTableId:
-          Ref: routeTableLambdaPublicB
-        DestinationCidrBlock: 0.0.0.0/0
-        GatewayId:
-          Ref: locatotronInternetGateway
-
-    subnetRouteTableAssociationLambdaPublicA:
-      Type: AWS::EC2::SubnetRouteTableAssociation
-      Properties:
-        SubnetId:
-          Ref: publicSubnetA
-        RouteTableId:
-          Ref: routeTableLambdaPublicA
-
-    subnetRouteTableAssociationLambdaPublicB:
-      Type: AWS::EC2::SubnetRouteTableAssociation
-      Properties:
-        SubnetId:
-          Ref: publicSubnetB
-        RouteTableId:
-          Ref: routeTableLambdaPublicB
-
     subnetRouteTableAssociationLambdaPrivateA:
       Type: AWS::EC2::SubnetRouteTableAssociation
       Properties:
@@ -176,6 +133,14 @@ resources:
           Ref: privateSubnetB
         RouteTableId:
           Ref: routeTableLambdaPrivateB
+
+    subnetRouteTableAssociationLambdaPublicA:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: publicSubnetA
+        RouteTableId:
+          Ref: routeTableLambdaPublicA
 
     dbSecurityGroup:
       Type: AWS::EC2::SecurityGroup
@@ -256,9 +221,3 @@ resources:
         Ref: publicSubnetA
       Export:
         Name: locatotronPublicSubnetA-${self:provider.stage}
-    locatotronPublicSubnetB:
-      Description: "Locatotron Public Subnet B"
-      Value:
-        Ref: publicSubnetB
-      Export:
-        Name: locatotronPublicSubnetB-${self:provider.stage}
