@@ -1,0 +1,19 @@
+{
+  "db": {
+    "name": "locatotron",
+    "username": "locatotron",
+    "password": "<A GOOD PASSWORD>",
+    "port": "5432"
+  },
+  "mailgun": {
+    "apikey": "<MAILGUN API KEY>",
+    "domain": "<SANDBOXDOMAIN.mailgun.org>",
+    "senderName": "Locatotron",
+    "sender": "postmaster"
+  },
+  "frontend": {
+    "bucket": "<UNIQUE BUCKET NAME>",
+    "baseURL": "<FROM BACKEND DEPLOYMENT>",
+    "googleMapsAPIKey": "<GOOGLE MAPS API KEY>"
+  }
+}

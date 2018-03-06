@@ -1,0 +1,264 @@
+service: locatotron-infra
+
+frameworkVersion: "=1.10.0"
+
+provider:
+  name: aws
+  profile: locatotron
+  stage: dev
+
+resources:
+  Resources:
+    locatotronVPC:
+      Type: AWS::EC2::VPC
+      Properties:
+        CidrBlock: 10.0.0.0/16
+
+    locatotronInternetGateway:
+      Type: AWS::EC2::InternetGateway
+
+    locatotronVPCGatewayAttachment:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+        VpcId:
+          Ref: locatotronVPC
+        InternetGatewayId:
+          Ref: locatotronInternetGateway
+
+    locatotronElasticIP:
+      Type: AWS::EC2::EIP
+      Properties:
+        Domain: vpc
+
+    locatotronNatGateway:
+      Type: AWS::EC2::NatGateway
+      Properties:
+        AllocationId:
+          Fn::GetAtt:
+            - locatotronElasticIP
+            - AllocationId
+        SubnetId:
+          Ref: publicSubnetA
+
+    privateSubnetA:
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: locatotronVPC
+        CidrBlock: 10.0.1.0/24
+        AvailabilityZone:
+          Fn::Select:
+            - '0'
+            - Fn::GetAZs: ''
+
+    privateSubnetB:
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: locatotronVPC
+        CidrBlock: 10.0.2.0/24
+        AvailabilityZone:
+          Fn::Select:
+            - '1'
+            - Fn::GetAZs: ''
+
+    publicSubnetA:
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: locatotronVPC
+        CidrBlock: 10.0.3.0/24
+        AvailabilityZone:
+          Fn::Select:
+            - '0'
+            - Fn::GetAZs: ''
+
+    publicSubnetB:
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: locatotronVPC
+        CidrBlock: 10.0.4.0/24
+        AvailabilityZone:
+          Fn::Select:
+            - '1'
+            - Fn::GetAZs: ''
+
+    routeTableLambdaPublicA:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: locatotronVPC
+
+    routeTableLambdaPublicB:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: locatotronVPC
+
+    routeTableLambdaPrivateA:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: locatotronVPC
+
+    routeTableLambdaPrivateB:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: locatotronVPC
+
+    routeLambdaPrivateA:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId:
+          Ref: routeTableLambdaPrivateA
+        DestinationCidrBlock: 0.0.0.0/0
+        NatGatewayId:
+          Ref: locatotronNatGateway
+
+    routeLambdaPrivateB:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId:
+          Ref: routeTableLambdaPrivateB
+        DestinationCidrBlock: 0.0.0.0/0
+        NatGatewayId:
+          Ref: locatotronNatGateway
+
+    routeLambdaPublicA:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId:
+          Ref: routeTableLambdaPublicA
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId:
+          Ref: locatotronInternetGateway
+
+    routeLambdaPublicB:
+      Type: AWS::EC2::Route
+      DependsOn: locatotronVPCGatewayAttachment
+      Properties:
+        RouteTableId:
+          Ref: routeTableLambdaPublicB
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId:
+          Ref: locatotronInternetGateway
+
+    subnetRouteTableAssociationLambdaPublicA:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: publicSubnetA
+        RouteTableId:
+          Ref: routeTableLambdaPublicA
+
+    subnetRouteTableAssociationLambdaPublicB:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: publicSubnetB
+        RouteTableId:
+          Ref: routeTableLambdaPublicB
+
+    subnetRouteTableAssociationLambdaPrivateA:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: privateSubnetA
+        RouteTableId:
+          Ref: routeTableLambdaPrivateA
+
+    subnetRouteTableAssociationLambdaPrivateB:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: privateSubnetB
+        RouteTableId:
+          Ref: routeTableLambdaPrivateB
+
+    dbSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: Database Security Group
+        VpcId:
+          Ref: locatotronVPC
+        SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: ${file(../config.${self:provider.stage}.json):db.port}
+          ToPort: ${file(../config.${self:provider.stage}.json):db.port}
+          CidrIp: 10.0.0.0/16
+
+    dbSubnetGroup:
+      Type: AWS::RDS::DBSubnetGroup
+      Properties:
+        DBSubnetGroupDescription: Database Subnet Group
+        SubnetIds:
+          - Ref: privateSubnetA
+          - Ref: privateSubnetB
+
+    pgDB:
+      Type: "AWS::RDS::DBInstance"
+      DeletionPolicy: "Snapshot"
+      Properties:
+        Engine: "postgres"
+        EngineVersion: "9.6.5"
+        DBInstanceClass: "db.t2.micro"
+        StorageType: gp2
+        AllocatedStorage: 20
+        DBName: ${file(../config.${self:provider.stage}.json):db.name}
+        MasterUsername: ${file(../config.${self:provider.stage}.json):db.username}
+        MasterUserPassword: ${file(../config.${self:provider.stage}.json):db.password}
+        Port: ${file(../config.${self:provider.stage}.json):db.port}
+        DBSubnetGroupName:
+          Ref: dbSubnetGroup
+        VPCSecurityGroups:
+        - Fn::GetAtt:
+          - dbSecurityGroup
+          - GroupId
+
+  Outputs:
+    locatotronDBAddress:
+      Description: "Locatotron DB Host address"
+      Value:
+        Fn::GetAtt:
+          - pgDB
+          - Endpoint.Address
+      Export:
+        Name: locatotronDBAddress-${self:provider.stage}
+    locatotronVPC:
+      Description: "Locatotron VPC"
+      Value:
+        Ref: locatotronVPC
+      Export:
+        Name: locatotronVPC-${self:provider.stage}
+    locatotronDBSG:
+      Description: "Locatotron DB Security Group"
+      Value:
+        Ref: dbSecurityGroup
+      Export:
+        Name: locatotronDBSG-${self:provider.stage}
+    locatotronPrivateSubnetA:
+      Description: "Locatotron Private Subnet A"
+      Value:
+        Ref: privateSubnetA
+      Export:
+        Name: locatotronPrivateSubnetA-${self:provider.stage}
+    locatotronPrivateSubnetB:
+      Description: "Locatotron Private Subnet B"
+      Value:
+        Ref: privateSubnetB
+      Export:
+        Name: locatotronPrivateSubnetB-${self:provider.stage}
+    locatotronPublicSubnetA:
+      Description: "Locatotron Public Subnet A"
+      Value:
+        Ref: publicSubnetA
+      Export:
+        Name: locatotronPublicSubnetA-${self:provider.stage}
+    locatotronPublicSubnetB:
+      Description: "Locatotron Public Subnet B"
+      Value:
+        Ref: publicSubnetB
+      Export:
+        Name: locatotronPublicSubnetB-${self:provider.stage}

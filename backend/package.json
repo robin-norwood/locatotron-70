@@ -1,0 +1,24 @@
+{
+  "name": "locatotron-backend-70",
+  "version": "1.0.0",
+  "description": "Notify users of events within a geographic area",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "mail": "node testmail.js"
+  },
+  "keywords": [
+    "geolocation",
+    "aws",
+    "acloudguru"
+  ],
+  "author": "Robin Norwood <robin@acloud.guru>",
+  "license": "ISC",
+  "dependencies": {
+    "mailgun-js": "^0.16.0",
+    "pg": "^7.4.1",
+    "rand-token": "^0.4.0"
+  },
+  "devDependencies": {
+  }
+}

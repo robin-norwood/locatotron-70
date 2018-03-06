@@ -1,0 +1,96 @@
+service: locatotron-backend
+
+frameworkVersion: "=1.10.0"
+
+provider:
+  name: aws
+  profile: locatotron
+  stage: dev
+  runtime: nodejs6.10
+  environment:
+    PGHOST:
+      Fn::ImportValue: locatotronDBAddress-${self:provider.stage}
+    PGPORT: ${file(../config.${self:provider.stage}.json):db.port}
+    PGDATABASE: ${file(../config.${self:provider.stage}.json):db.name}
+    PGUSER: ${file(../config.${self:provider.stage}.json):db.username}
+    PGPASSWORD: ${file(../config.${self:provider.stage}.json):db.password}
+    MAILGUN_APIKEY: ${file(../config.${self:provider.stage}.json):mailgun.apikey}
+    MAILGUN_DOMAIN: ${file(../config.${self:provider.stage}.json):mailgun.domain}
+    MAILGUN_SENDER: ${file(../config.${self:provider.stage}.json):mailgun.sender}
+    MAILGUN_SENDER_NAME: ${file(../config.${self:provider.stage}.json):mailgun.senderName}
+  vpc:
+    id:
+      Ref:
+        Fn::ImportValue: locatotronVPC-${self:provider.stage}
+    securityGroupIds:
+      - Fn::ImportValue: locatotronDBSG-${self:provider.stage}
+    subnetIds:
+      - Fn::ImportValue: locatotronPrivateSubnetA-${self:provider.stage}
+      - Fn::ImportValue: locatotronPrivateSubnetB-${self:provider.stage}
+
+package:
+  include:
+    - node_modules/**
+
+functions:
+  setupPostGIS:
+    handler: lambda/initDB.setupPostGISHandler
+  createTables:
+    handler: lambda/initDB.createTablesHandler
+  createUser:
+    handler: lambda/user.createUserHandler
+    events:
+      - http:
+          path: user
+          method: put
+          cors: true
+  updateUser:
+    handler: lambda/user.updateUserHandler
+    events:
+      - http:
+          path: user/{id}
+          method: post
+          cors: true
+  getUser:
+    handler: lambda/user.getUserHandler
+    events:
+      - http:
+          path: user/{id}
+          method: get
+          cors: true
+  deleteUser:
+    handler: lambda/user.deleteUserHandler
+    events:
+      - http:
+          path: user/{id}
+          method: delete
+          cors: true
+  createCampaign:
+    handler: lambda/campaign.createCampaignHandler
+    events:
+      - http:
+          path: campaign
+          method: put
+          cors: true
+  getCampaign:
+    handler: lambda/campaign.getCampaignHandler
+    events:
+      - http:
+          path: campaign/{id}
+          method: get
+          cors: true
+  updateCampaign:
+    handler: lambda/campaign.updateCampaignHandler
+    events:
+      - http:
+          path: campaign/{id}
+          method: post
+          cors: true
+  notify:
+    handler: lambda/campaign.notifyHandler
+    timeout: 60
+    events:
+      - http:
+          path: notify
+          method: put
+          cors: true

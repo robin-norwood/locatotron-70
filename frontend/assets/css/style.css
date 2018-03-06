@@ -1,0 +1,15 @@
+#map {
+  height: 600px;
+  width: 600px;
+  margin: 15px;
+ }
+
+ #appContainer {
+   width: 35%;
+   padding: 0.5em;
+   float: left;
+ }
+
+.button {
+  margin: 0.25em;
+}

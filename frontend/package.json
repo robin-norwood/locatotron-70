@@ -1,0 +1,26 @@
+{
+  "name": "locatotron-frontend-70",
+  "version": "1.0.0",
+  "description": "Notify users of events within a geographic area",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node build.js",
+    "local": "ws -d dist"
+  },
+  "keywords": [
+    "geolocation",
+    "aws",
+    "acloudguru"
+  ],
+  "author": "Robin Norwood <robin@acloud.guru>",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {
+    "jstransformer-handlebars": "^1.1.0",
+    "metalsmith": "^2.3.0",
+    "metalsmith-assets": "^0.1.0",
+    "metalsmith-layouts": "^2.1.0",
+    "serverless-finch": "^1.4.0"
+  }
+}
