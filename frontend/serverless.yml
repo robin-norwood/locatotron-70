@@ -1,6 +1,6 @@
 service: locatotron-frontend
 
-frameworkVersion: "=1.10.0"
+frameworkVersion: ">=1.10.0"
 
 provider:
   name: aws
